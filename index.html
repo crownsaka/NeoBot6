@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NeoBot - Horizon AI</title>
+  <style>
+    :root {
+      --primary: #6e48aa;
+      --secondary: #9d50bb;
+      --dark: #1e1e2d;
+      --light: #f5f6fa;
+      --light-bg: #ffffff;
+      --light-text: #1e1e2d;
+      --light-sidebar: #f0f0f5;
+      --light-hover: #e0e0e0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: var(--dark);
+      color: var(--light);
+      transition: background 0.3s, color 0.3s;
+    }
+
+    body.light-mode {
+      background: var(--light-bg);
+      color: var(--light-text);
+    }
+
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+
+    .sidebar {
+      width: 260px;
+      background: linear-gradient(135deg, var(--dark), #2d2d3d);
+      padding: 20px;
+      border-right: 1px solid #333;
+    }
+
+    body.light-mode .sidebar {
+      background: var(--light-sidebar);
+      border-right: 1px solid #ccc;
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+
+    .menu-item {
+      padding: 12px;
+      margin: 5px 0;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .menu-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    body.light-mode .menu-item:hover {
+      background: var(--light-hover);
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-header {
+      padding: 20px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    body.light-mode .chat-header {
+      border-bottom: 1px solid #ccc;
+    }
+
+    .model-selector {
+      margin-left: auto;
+      padding: 8px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+    }
+
+    .chat-container {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .message {
+      margin-bottom: 15px;
+      max-width: 80%;
+    }
+
+    .user-message {
+      margin-left: auto;
+      background: var(--primary);
+      padding: 12px 16px;
+      border-radius: 18px 18px 4px 18px;
+      color: white;
+    }
+
+    .bot-message {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 12px 16px;
+      border-radius: 18px 18px 18px 4px;
+    }
+
+    body.light-mode .bot-message {
+      background: #f0f0f0;
+      color: #000;
+    }
+
+    .input-area {
+      padding: 20px;
+      border-top: 1px solid #333;
+    }
+
+    .input-box {
+      display: flex;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    input {
+      flex: 1;
+      background: #2e2e2e;
+      border: none;
+      padding: 14px;
+      color: white;
+      outline: none;
+    }
+
+    body.light-mode input {
+      background: #eaeaea;
+      color: black;
+    }
+
+    button {
+      background: var(--secondary);
+      color: white;
+      border: none;
+      padding: 0 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .toggle-mode {
+      border: 1px solid #888;
+      background: none;
+      color: inherit;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="sidebar">
+      <div class="logo">NEOBOT</div>
+      <div class="menu-item">👤 Profile</div>
+      <div class="menu-item">⚙️ Settings</div>
+      <button class="toggle-mode" onclick="toggleTheme()">Toggle Theme</button>
+    </div>
+    <div class="main-content">
+      <div class="chat-header">
+        <h3>NeoBot Chat</h3>
+        <div class="model-selector">meta-llama/llama-3-70b-instruct</div>
+      </div>
+      <div class="chat-container" id="chatContainer">
+        <div class="message bot-message">Halo! Saya NeoBot. Ada yang bisa saya bantu?</div>
+      </div>
+      <div class="input-area">
+        <div class="input-box">
+          <input type="text" id="userInput" placeholder="Tulis pertanyaan kamu...">
+          <button onclick="startVoice()" title="Gunakan suara 🎤">🎤</button>
+          <button id="sendButton">Kirim</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+    }
+
+    document.getElementById('sendButton').addEventListener('click', sendMessage);
+    document.getElementById('userInput').addEventListener('keypress', function (e) {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    async function sendMessage() {
+      const input = document.getElementById('userInput');
+      const message = input.value.trim();
+      if (!message) return;
+
+      const chatContainer = document.getElementById('chatContainer');
+      const userMessage = document.createElement('div');
+      userMessage.className = 'message user-message';
+      userMessage.textContent = message;
+      chatContainer.appendChild(userMessage);
+      input.value = '';
+
+      const loadingMessage = document.createElement('div');
+      loadingMessage.className = 'message bot-message';
+      loadingMessage.textContent = 'NeoBot sedang mengetik...';
+      chatContainer.appendChild(loadingMessage);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      try {
+        const response = await fetch('http://localhost:25000/api/ask', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_input: message })
+        });
+        const data = await response.json();
+
+        chatContainer.removeChild(loadingMessage);
+        const botMessage = document.createElement('div');
+        botMessage.className = 'message bot-message';
+        botMessage.innerHTML = data.response;
+        chatContainer.appendChild(botMessage);
+        speak(botMessage.textContent);
+      } catch (error) {
+        chatContainer.removeChild(loadingMessage);
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'message bot-message';
+        errorMessage.textContent = 'Terjadi kesalahan. Coba lagi.';
+        chatContainer.appendChild(errorMessage);
+      }
+
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+
+    function startVoice() {
+      const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.lang = 'id-ID';
+      recognition.interimResults = false;
+      recognition.maxAlternatives = 1;
+
+      recognition.onresult = (event) => {
+        const hasil = event.results[0][0].transcript;
+        document.getElementById('userInput').value = hasil;
+        sendMessage();
+      };
+
+      recognition.onerror = (event) => {
+        alert('Voice Error: ' + event.error);
+      };
+
+      recognition.start();
+    }
+
+    function speak(text) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'id-ID';
+      speechSynthesis.speak(utterance);
+    }
+  </script>
+</body>
+</html>
